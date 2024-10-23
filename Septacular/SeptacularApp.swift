@@ -17,7 +17,16 @@ import SwiftUI
 struct SeptacularApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            TabView {
+                ContentView()
+                    .tabItem {
+                        Label("Map", systemImage: "map")
+                    }
+                NextTrainView()
+                    .tabItem {
+                        Label("Next Train", systemImage: "arrow.2.circlepath")
+                    }
+            }
         }
     }
 }
