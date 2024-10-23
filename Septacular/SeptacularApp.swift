@@ -7,6 +7,11 @@
 
 import SwiftUI
 
+
+// Train struct to map the JSON response from the SEPTA API
+// Conforms to Identifiable to work with the Map view's annotationItems parameter
+
+
 @main
 struct SeptacularApp: App {
     var body: some Scene {
