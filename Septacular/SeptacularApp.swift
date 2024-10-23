@@ -12,6 +12,7 @@ import SwiftUI
 // Conforms to Identifiable to work with the Map view's annotationItems parameter
 
 
+
 @main
 struct SeptacularApp: App {
     var body: some Scene {
@@ -20,3 +21,4 @@ struct SeptacularApp: App {
         }
     }
 }
+
