@@ -195,6 +195,9 @@
 			);
 			mainGroup = D76B77542CC82CB2003D6360;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D74E9ABD2CCAE13400434C7A /* XCLocalSwiftPackageReference "AlphabetScrollBar" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D76B775E2CC82CB2003D6360 /* Products */;
 			projectDirPath = "";
@@ -399,6 +402,7 @@
 				DEVELOPMENT_TEAM = 7N5RL598J9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Needed to Find Trains Nearby";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -429,6 +433,7 @@
 				DEVELOPMENT_TEAM = 7N5RL598J9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Needed to Find Trains Nearby";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -560,6 +565,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		D74E9ABD2CCAE13400434C7A /* XCLocalSwiftPackageReference "AlphabetScrollBar" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = AlphabetScrollBar;
+		};
+/* End XCLocalSwiftPackageReference section */
 	};
 	rootObject = D76B77552CC82CB2003D6360 /* Project object */;
 }

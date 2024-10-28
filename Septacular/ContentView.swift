@@ -1,45 +1,20 @@
 import SwiftUI
 import MapKit
 import Foundation
+import CoreLocation
 
-
-struct Train: Codable, Identifiable {
-    let lat: String
-    let lon: String
-    let trainno: String
-    let dest: String?
-    let service: String?
-    let currentstop: String?
-    let nextstop: String?
-    let line: String?
-    let consist: String?
-    let late: Int?
-    let TRACK: String?
-    let TRACK_CHANGE: String?
-    
-    // Use Trainno as the unique identifier
-    var id: String {
-        return trainno
-    }
-}
-
-enum NetworkError: Error {
-    case invalidURL
-    case noData
-    case decodingError
-}
-
-struct ContentView: View {
+struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
+    @StateObject private var locationManager = LocationManager()
     
     // State to track the region of the map and the fetched trains
-    @State private var region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 39.9526, longitude: -75.1652), span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+    @State private var region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 39.9526, longitude: -75.1652), span: MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3))
     @State var trains: [Train] = [] // State to store the list of trains
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
-                Map(coordinateRegion: $region, annotationItems: trains) { train in
+                Map(coordinateRegion: $region, showsUserLocation: true, annotationItems: trains) { train in
                     // Create a point annotation for each train
                     MapAnnotation(coordinate: CLLocationCoordinate2D(latitude: Double(train.lat) ?? 0.0, longitude: Double(train.lon) ?? 0.0)) {
                         NavigationLink(destination: TrainDetailsView(train: train)){
@@ -47,9 +22,10 @@ struct ContentView: View {
                                 Image(systemName: "train.side.front.car")
                                     .foregroundColor(getRollingStock(consist: train.consist))
                                     .font(.title)
+                                    .frame(maxHeight: 40)
                                 
                                 Text(train.trainno)
-                                    .padding(3)
+                                    .padding(2)
                                     .foregroundColor(colorScheme == .dark ? .white : .black) // Black text in light mode, white text in dark mode
                                     .background(colorScheme == .dark ? Color.black : Color.white) // White background in light mode, black background in dark mode
                                     .cornerRadius(8)
@@ -57,6 +33,10 @@ struct ContentView: View {
                         }
                     }
                 }
+                .cornerRadius(10)
+                .shadow(radius: 5)
+                .padding()
+                .padding(.bottom, -10)
                 
                 List(trains, id: \.trainno) { train in
                     NavigationLink(destination: TrainDetailsView(train: train)){
@@ -71,19 +51,21 @@ struct ContentView: View {
                 .onAppear {
                     self.fetchData() // Fetch train data when the map appears
                 }
-                
-                // Button to refresh data manually
-                Button(action: {
-                    self.fetchData()
-                }) {
-                    Text("Refresh Train Data")
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
             }
             .navigationBarTitle("Septacular")
+            .preferredColorScheme(.dark)
+            .toolbarBackground(Color.red, for:.navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        self.fetchData()
+                    }) {
+                        Label("Refresh", systemImage: "arrow.clockwise")
+                    }
+                }
+            }
+            .tint(.white)
         }
     }
     
@@ -93,7 +75,7 @@ struct ContentView: View {
             print("Invalid URL")
             return
         }
-        
+
         URLSession.shared.dataTask(with: url) { (data, response, error) in
             if let error = error {
                 print("Error fetching data: \(error.localizedDescription)")
@@ -107,18 +89,53 @@ struct ContentView: View {
             
             do {
                 let decoder = JSONDecoder()
-                let result = try decoder.decode([Train].self, from: data)
-                DispatchQueue.main.async {
-                    self.trains = result // Update the trains state with the fetched data
+                let results = try decoder.decode([Train].self, from: data)
+
+                // Check if current location is available
+                if locationManager.isCurrentLocationAvailable(), let location = locationManager.location {
+                    var trainDistances: [(train: Train, distance: CLLocationDistance)] = []
+                    print("Current Location: \(location.coordinate)")
+                    for train in results {
+                        // Ensure the latitude and longitude are valid Double values
+                        if let trainLat = Double(train.lat), let trainLon = Double(train.lon) {
+                            let trainLocation = CLLocation(latitude: trainLat, longitude: trainLon)
+                            let distance = location.distance(from: trainLocation)
+                            trainDistances.append((train: train, distance: distance))
+                        } else {
+                            print("Invalid train coordinates for train: \(train.trainno)")
+                        }
+                    }
+                    
+                    // Sort the trains by distance
+                    trainDistances.sort { $0.distance < $1.distance }
+
+                    // Assign sorted trains back to self.trains
+                    DispatchQueue.main.async {
+                        self.trains = trainDistances.map { $0.train }
+                    }
+
+                    // Print sorted distances for verification
+                    for trainDistance in trainDistances {
+                        print("Train at \(trainDistance.train.lat), \(trainDistance.train.lon): \(trainDistance.distance) meters")
+                    }
+                } else {
+                    // Handle the case when the current location is not available
+                    DispatchQueue.main.async {
+                        self.trains = results
+                        print("Current location is unavailable. Displaying all trains without distance sorting.")
+                    }
                 }
             } catch {
                 print("JSON decoding failed: \(error.localizedDescription)")
             }
         }.resume()
+        
+        // Schedule the next fetch
         DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
             fetchData()
         }
     }
+
 }
 
 struct TrainDetailsView: View {
@@ -140,58 +157,87 @@ struct TrainDetailsView: View {
 
 struct NextTrainView: View {
     @StateObject var viewModel = ViewModel()
-    
+
     var body: some View {
-        VStack {
-            // Starting Station Picker
-            Picker("Starting Station", selection: $viewModel.start) {
-                ForEach(viewModel.stops, id: \.self) { stop in
-                    Text(stop)
-                        .id(stop)
-                }
-            }
-            .onChange(of: viewModel.start) { newValue in
-                // Fetch data when the selected start station changes
-                Task {
-                    await viewModel.fetchNextTrains()
-                }
-            }
-            
-            // Destination Station Picker
-            Picker("Destination", selection: $viewModel.end) {
-                ForEach(viewModel.stops, id: \.self) { stop in
-                    Text(stop)
-                        .id(stop)
-                }
-            }
-            .onChange(of: viewModel.end) { newValue in
-                // Fetch data when the selected end station changes
-                Task {
-                    await viewModel.fetchNextTrains()
-                }
-            }
+        NavigationStack {
+            VStack {
+                List {
+                    Section(header: Text("Select Stations")) {
+                        // Starting Station Picker
+                        Picker("Starting Station", selection: $viewModel.start) {
+                            ForEach(viewModel.stops, id: \.self) { stop in
+                                Text(stop)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        .onChange(of: viewModel.start) { newValue in
+                            Task {
+                                await viewModel.fetchNextTrains()
+                            }
+                        }
+                        
+                        // Destination Station Picker
+                        Picker("Destination", selection: $viewModel.end) {
+                            ForEach(viewModel.stops, id: \.self) { stop in
+                                Text(stop)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        .onChange(of: viewModel.end) { newValue in
+                            Task {
+                                await viewModel.fetchNextTrains()
+                            }
+                        }
+                    }
 
-            // Display the fetched trains
-            List(viewModel.nextTrains) { train in
-                VStack(alignment: .leading) {
-                    Text("Train: \(train.origTrain ?? "N/A")")
-                    Text("Departure: \(train.origDepartureTime ?? "N/A")")
-                    Text("Arrival: \(train.origArrivalTime ?? "N/A")")
-                    Text("Delay: \(train.origDelay ?? "N/A")")
+                    // Train List
+                    Section(header: Text("Next Trains")) {
+                        if viewModel.nextTrains.isEmpty {
+                            Text("No Trains Found")
+                        }
+                        else {
+                            ForEach(viewModel.nextTrains) { train in
+                                VStack(alignment: .leading) {
+                                    Text("Train: \(train.origTrain ?? "N/A")")
+                                    Text("Departure: \(train.origDepartureTime ?? "N/A")")
+                                    Text("Arrival: \(train.origArrivalTime ?? "N/A")")
+                                    Text("Delay: \(train.origDelay ?? "N/A")")
+                                    
+                                    if train.isDirect == "false" {
+                                        Text("\nConnect at \(train.connection ?? "N/A")\n")
+                                        Text("Train: \(train.termTrain ?? "N/A")")
+                                        Text("Departure: \(train.termDepartureTime ?? "N/A")")
+                                        Text("Arrival: \(train.termArrivalTime ?? "N/A")")
+                                        Text("Delay: \(train.termDelay ?? "N/A")")
+                                    }
+                                }
+                            }
+                    }
+                    }
                 }
-            }
-
-            Spacer()
-
-            Button("Refresh") {
-                Task {
-                    await viewModel.fetchNextTrains()
+                .navigationTitle("Next to Arrive")
+                .navigationBarTitleDisplayMode(.inline)
+                .preferredColorScheme(.dark)
+                .toolbarBackground(Color.blue, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            Task {
+                                await viewModel.fetchNextTrains()
+                            }
+                        } label: {
+                            Label("Refresh", systemImage: "arrow.clockwise")
+                        }
+                    }
                 }
+                .tint(.white)
             }
         }
-        .padding()
     }
 }
+
+
 
 // Updated getRollingStock to handle optional consist properly and restructured conditions
 func getRollingStock(consist: String?) -> Color {
@@ -217,17 +263,18 @@ func getRollingStock(consist: String?) -> Color {
 func nextToArrive(start: String, end: String, n: Int) async throws -> [NextTrain] {
     let encodedStart = start.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
     let encodedEnd = end.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+    var url: URL
     
-    guard let url = URL(string: "https://www3.septa.org/api/NextToArrive/index.php?req1=\(encodedStart)&req2=\(encodedEnd)&req3=\(n)") else {
-        throw NetworkError.invalidURL
+    if encodedStart != encodedEnd && encodedStart != "---" && encodedEnd != "---" {
+        guard let validURL = URL(string: "https://www3.septa.org/api/NextToArrive/index.php?req1=\(encodedStart)&req2=\(encodedEnd)&req3=\(n)") else {
+            throw NetworkError.invalidURL
+        }
+        url = validURL
+    } else {
+        return []
     }
-
+    
     let (data, _) = try await URLSession.shared.data(from: url)
-
-    // Print raw JSON response for debugging
-    if let jsonString = String(data: data, encoding: .utf8) {
-        print("Raw JSON response: \(jsonString)")
-    }
 
     guard !data.isEmpty else {
         throw NetworkError.noData

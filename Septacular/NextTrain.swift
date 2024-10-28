@@ -7,33 +7,12 @@
 
 import Foundation
 
-
-struct NextTrain: Decodable, Identifiable {
-    var id = UUID()
-    let origTrain: String?
-    let origLine: String?
-    let origDepartureTime: String?
-    let origArrivalTime: String?
-    let origDelay: String?
-    let isDirect: String?
-
-    // Coding keys to map the JSON keys with snake_case to the camelCase in Swift
-    enum CodingKeys: String, CodingKey {
-        case origTrain = "orig_train"
-        case origLine = "orig_line"
-        case origDepartureTime = "orig_departure_time"
-        case origArrivalTime = "orig_arrival_time"
-        case origDelay = "orig_delay"
-        case isDirect = "isdirect"
-    }
-}
-
 class ViewModel: ObservableObject {
     @Published var start = "---"
     @Published var end = "---"
     
     @Published var stops = [
-        "---","9th Street", "30th Street Station", "49th Street", "Airport Terminal A", "Airport Terminal B",
+        "---","9th Street Lansdale", "30th Street Station", "49th St", "Airport Terminal A", "Airport Terminal B",
         "Airport Terminal C-D", "Airport Terminal E-F", "Allegheny",
         "Ambler", "Ardmore", "Ardsley", "Bala", "Berwyn",
         "Bethayres", "Bridesburg", "Bristol", "Bryn Mawr", "Carpenter",
@@ -74,7 +53,6 @@ class ViewModel: ObservableObject {
     func fetchNextTrains() async {
         do {
             let trains = try await nextToArrive(start: start, end: end, n: 5)
-            print(trains)
             DispatchQueue.main.async {
                 self.nextTrains = trains
             }
