@@ -1,0 +1,15 @@
+{
+  "originHash" : "d1b1590c270fac82b671195369f2a4573a0e614181f1465ad09cb9aa3df18f43",
+  "pins" : [
+    {
+      "identity" : "alphabetscrollbar",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Salubrejoe/AlphabetScrollBar.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "f17713b8749bd1642cf8b14f2085e3d85395057b"
+      }
+    }
+  ],
+  "version" : 3
+}

@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D7886C972D36202200571D75 /* AlphabetScrollBar in Frameworks */ = {isa = PBXBuildFile; productRef = D7886C962D36202200571D75 /* AlphabetScrollBar */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D76B776E2CC82CB7003D6360 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D7886C972D36202200571D75 /* AlphabetScrollBar in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,7 @@
 				D76B775F2CC82CB2003D6360 /* Septacular */,
 				D76B77702CC82CB7003D6360 /* SeptacularTests */,
 				D76B777A2CC82CB7003D6360 /* SeptacularUITests */,
+				D7886C262D35D85700571D75 /* Frameworks */,
 				D76B775E2CC82CB2003D6360 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +96,13 @@
 				D76B77772CC82CB7003D6360 /* SeptacularUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D7886C262D35D85700571D75 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +125,7 @@
 			);
 			name = Septacular;
 			packageProductDependencies = (
+				D7886C962D36202200571D75 /* AlphabetScrollBar */,
 			);
 			productName = Septacular;
 			productReference = D76B775D2CC82CB2003D6360 /* Septacular.app */;
@@ -196,7 +210,7 @@
 			mainGroup = D76B77542CC82CB2003D6360;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				D74E9ABD2CCAE13400434C7A /* XCLocalSwiftPackageReference "AlphabetScrollBar" */,
+				D7886C952D36202200571D75 /* XCRemoteSwiftPackageReference "AlphabetScrollBar" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D76B775E2CC82CB2003D6360 /* Products */;
@@ -402,18 +416,20 @@
 				DEVELOPMENT_TEAM = 7N5RL598J9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Needed to Find Trains Nearby";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bxnto.Septacular;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -433,18 +449,20 @@
 				DEVELOPMENT_TEAM = 7N5RL598J9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Needed to Find Trains Nearby";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bxnto.Septacular;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -566,12 +584,24 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		D74E9ABD2CCAE13400434C7A /* XCLocalSwiftPackageReference "AlphabetScrollBar" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = AlphabetScrollBar;
+/* Begin XCRemoteSwiftPackageReference section */
+		D7886C952D36202200571D75 /* XCRemoteSwiftPackageReference "AlphabetScrollBar" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Salubrejoe/AlphabetScrollBar.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D7886C962D36202200571D75 /* AlphabetScrollBar */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D7886C952D36202200571D75 /* XCRemoteSwiftPackageReference "AlphabetScrollBar" */;
+			productName = AlphabetScrollBar;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D76B77552CC82CB2003D6360 /* Project object */;
 }

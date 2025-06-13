@@ -6,58 +6,126 @@
 //
 
 import Foundation
+import SwiftUI
 
-class ViewModel: ObservableObject {
+struct StationPair: Hashable, Identifiable {
+    var start: String
+    var end: String
+
+    var id: String { "\(start)-\(end)" } // Unique ID based on start and end
+}
+
+
+@MainActor class ViewModel: ObservableObject {
     @Published var start = "---"
     @Published var end = "---"
-    
-    @Published var stops = [
-        "---","9th Street Lansdale", "30th Street Station", "49th St", "Airport Terminal A", "Airport Terminal B",
-        "Airport Terminal C-D", "Airport Terminal E-F", "Allegheny",
-        "Ambler", "Ardmore", "Ardsley", "Bala", "Berwyn",
-        "Bethayres", "Bridesburg", "Bristol", "Bryn Mawr", "Carpenter",
-        "Chalfont", "Chelten Avenue", "Cheltenham", "Chester TC","Chestnut Hill East",
-        "Chestnut Hill West", "Churchmans Crossing", "Claymont",
-        "Clifton-Aldan", "Colmar", "Conshohocken", "Cornwells Heights",
-        "Crum Lynne", "Cynwyd", "Darby", "Daylesford",
-        "Delaware Valley College", "Devon", "Downingtown", "Doylestown",
-        "East Falls", "Eastwick Station", "Eddington", "Eddystone","Elkins Park",
-        "Elm Street", "Elywn Station", "Ewing", "Exton",
-        "Fern Rock TC", "Fernwood", "Folcroft", "Forest Hills",
-        "Ft Washington", "Fox Chase", "Fortuna", "Germantown",
-        "Gladstone", "Glenolden", "Glenside", "Gravers", "Gwynedd Valley",
-        "Hatboro", "Haverford", "Highland Ave",
-        "Highland", "Holmesburg Jct", "Ivy Ridge", "Jenkintown-Wyncote",
-        "Jefferson Station", "Langhorne", "Lansdale", "Lansdowne",
-        "Lawndale", "Levittown", "Link Belt",
-        "Main St", "Malvern", "Marcus Hook", "Manayunk",
-        "Media", "Melrose Park", "Merion", "Miquon",
-        "Morton", "Mt. Airy", "Narberth", "Neshaminy Falls",
-        "Norristown Elm Street", "Norwood", "North Broad", "North Hills",
-        "North Philadelphia", "Oreland", "Overbrook", "Paoli",
-        "Penllyn", "Pennbrook", "Philadelphia International Airport",
-        "Philmont", "Pitman", "Primos", "Prospect Park",
-        "Queen Lane", "Radnor", "Ridley Park", "Rosemont",
-        "Roslyn", "Rydal", "Secane", "Sedgwick",
-        "Sharon Hill", "Somerton", "Spring Mill", "St. Davids",
-        "St. Martins", "Suburban Station", "Swarthmore", "Tacony",
-        "Temple U", "Thorndale", "Torresdale", "Trenton",
-        "Trevose", "Tulpehocken", "Penn Medicine Station", "Villanova",
-        "Wallingford", "Warminster", "Wayne", "West Trenton",
-        "Wilmington", "Willow Grove", "Wissahickon", "Woodbourne",
-        "Wyndmoor", "Wynnefield Avenue", "Wynnewood", "Yardley"
-    ]
-    
-    @Published var nextTrains: [NextTrain] = []
+    @Published var stops: [Stop] = []
+    @Published var favorites: [StationPair] = []
 
+    @Published var nextTrains: [NextTrain] = []
+    
+    init() {
+        loadFavorites()
+    }
+    
+    func getStops() {
+        guard let url = URL(string: "https://benjiled.pythonanywhere.com/stops") else { return }
+        
+        // Attempt to load cached data first
+        if let cachedData = loadCachedStops() {
+            print("Loaded stops from cache")
+            decodeAndUpdateStops(from: cachedData)
+        }
+        
+        print("Fetching stops from network")
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data, error == nil else {
+                print("Network error: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
+            
+            Task { @MainActor in
+                self.saveStopsToCache(data)
+                self.decodeAndUpdateStops(from: data)
+            }
+        }.resume()
+    }
+    
+    // Function to save fetched stops data to cache
+    func saveStopsToCache(_ data: Data) {
+        let fileURL = getCacheFileURL()
+        do {
+            try data.write(to: fileURL)
+            print("Stops data cached successfully")
+        } catch {
+            print("Failed to cache stops data: \(error.localizedDescription)")
+        }
+    }
+
+    // Function to load cached stops data
+    func loadCachedStops() -> Data? {
+        let fileURL = getCacheFileURL()
+        return try? Data(contentsOf: fileURL)
+    }
+
+    // Function to get the cache file URL in the app's Documents directory
+    func getCacheFileURL() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0].appendingPathComponent("cachedStops.json")
+    }
+
+    // Decode and update stops on the main thread
+    func decodeAndUpdateStops(from data: Data) {
+        do {
+            let stopList = try JSONDecoder().decode(StopList.self, from: data)
+            DispatchQueue.main.async {
+                self.stops = stopList.stops.map { Stop(name: $0) } // Convert strings to Stop objects
+            }
+        } catch {
+            print("Decoding error: \(error.localizedDescription)")
+        }
+    }
+
+
+    
     func fetchNextTrains() async {
         do {
-            let trains = try await nextToArrive(start: start, end: end, n: 5)
-            DispatchQueue.main.async {
-                self.nextTrains = trains
+            let trains = try await nextToArrive(start: start, end: end, n: 10)
+            DispatchQueue.main.async { [weak self] in
+                self?.nextTrains = trains
             }
         } catch {
             print("Failed to fetch trains: \(error)")
         }
     }
+    
+    func loadFavorites() {
+        if let savedFavorites = UserDefaults.standard.array(forKey: "favoriteStationPairs") as? [[String]] {
+            favorites = savedFavorites.map { StationPair(start: $0[0], end: $0[1]) }
+        }
+    }
+
+    func addFavorite() {
+        let pair = StationPair(start: start, end: end)
+        if !favorites.contains(where: { $0 == pair }) {
+            favorites.append(pair)
+            saveFavorites()
+        }
+    }
+            
+    func removeFavorite() {
+        favorites.removeAll { $0 == StationPair(start: start, end: end) }
+        saveFavorites()
+    }
+
+    private func saveFavorites() {
+        let favoritesToSave = favorites.map { [$0.start, $0.end] }
+        UserDefaults.standard.set(favoritesToSave, forKey: "favoriteStationPairs")
+    }
+
+    func isFavorite() -> Bool {
+        favorites.contains(where: { $0 == StationPair(start: start, end: end) })
+    }
+
 }
+
